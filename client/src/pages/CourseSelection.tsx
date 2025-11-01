@@ -1,44 +1,29 @@
+import { useQuery } from "@tanstack/react-query";
 import CourseCard from "@/components/CourseCard";
 import ThemeToggle from "@/components/ThemeToggle";
 import htmlImage from '@assets/generated_images/HTML_structure_illustration_beginner_502904db.png';
 import cssImage from '@assets/generated_images/CSS_styling_concepts_illustration_91b5d603.png';
 import { Code2 } from "lucide-react";
 
+const courseImages: Record<string, string> = {
+  "html-basics": htmlImage,
+  "css-styling": cssImage
+};
+
 export default function CourseSelection() {
-  const courses = [
-    {
-      id: "html-basics",
-      title: "HTML Fundamentals",
-      level: "Beginner" as const,
-      topic: "Learn the Building Blocks of the Web",
-      description: "Start your web development journey by mastering HTML, the foundation of every website. Perfect for complete beginners with no prior coding experience.",
-      lessonCount: 12,
-      estimatedHours: 6,
-      learningOutcomes: [
-        "Understand HTML structure and syntax",
-        "Create semantic, accessible web pages",
-        "Use forms, tables, and media elements",
-        "Build a complete website from scratch"
-      ],
-      imageUrl: htmlImage
-    },
-    {
-      id: "css-styling",
-      title: "CSS Styling",
-      level: "Intermediate" as const,
-      topic: "Master the Art of Web Design",
-      description: "Take your web pages to the next level with CSS. Learn how to create beautiful, responsive designs that bring your content to life.",
-      lessonCount: 15,
-      estimatedHours: 8,
-      learningOutcomes: [
-        "Apply colors, fonts, and layouts with CSS",
-        "Create responsive designs for all devices",
-        "Use Flexbox and Grid for modern layouts",
-        "Implement animations and transitions"
-      ],
-      imageUrl: cssImage
-    }
-  ];
+  const { data: courses, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/courses'],
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg text-muted-foreground">Loading courses...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -63,8 +48,12 @@ export default function CourseSelection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {courses.map(course => (
-            <CourseCard key={course.id} {...course} />
+          {courses?.map((course: any) => (
+            <CourseCard 
+              key={course.id} 
+              {...course} 
+              imageUrl={courseImages[course.id]}
+            />
           ))}
         </div>
       </main>

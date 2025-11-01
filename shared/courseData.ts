@@ -102,27 +102,27 @@ export const courses: Course[] = [
         id: "section-1",
         title: "CSS Fundamentals",
         lessons: [
-          { id: "lesson-1-1", title: "What is CSS?" },
-          { id: "lesson-1-2", title: "Selectors and Specificity" },
-          { id: "lesson-1-3", title: "Colors and Backgrounds" },
-          { id: "lesson-1-4", title: "Typography and Fonts" },
-          { id: "lesson-1-5", title: "The Box Model" }
+          { id: "css-lesson-1-1", title: "What is CSS?" },
+          { id: "css-lesson-1-2", title: "Selectors and Specificity" },
+          { id: "css-lesson-1-3", title: "Colors and Backgrounds" },
+          { id: "css-lesson-1-4", title: "Typography and Fonts" },
+          { id: "css-lesson-1-5", title: "The Box Model" }
         ]
       },
       {
         id: "section-2",
         title: "Layout and Responsive Design",
         lessons: [
-          { id: "lesson-2-1", title: "Display and Positioning" },
-          { id: "lesson-2-2", title: "Flexbox Basics" },
-          { id: "lesson-2-3", title: "Flexbox Layouts" },
-          { id: "lesson-2-4", title: "CSS Grid Fundamentals" },
-          { id: "lesson-2-5", title: "Grid Layouts" },
-          { id: "lesson-2-6", title: "Responsive Design" },
-          { id: "lesson-2-7", title: "Media Queries" },
-          { id: "lesson-2-8", title: "Animations and Transitions" },
-          { id: "lesson-2-9", title: "Transforms and Effects" },
-          { id: "lesson-2-10", title: "Building a Complete Layout" }
+          { id: "css-lesson-2-1", title: "Display and Positioning" },
+          { id: "css-lesson-2-2", title: "Flexbox Basics" },
+          { id: "css-lesson-2-3", title: "Flexbox Layouts" },
+          { id: "css-lesson-2-4", title: "CSS Grid Fundamentals" },
+          { id: "css-lesson-2-5", title: "Grid Layouts" },
+          { id: "css-lesson-2-6", title: "Responsive Design" },
+          { id: "css-lesson-2-7", title: "Media Queries" },
+          { id: "css-lesson-2-8", title: "Animations and Transitions" },
+          { id: "css-lesson-2-9", title: "Transforms and Effects" },
+          { id: "css-lesson-2-10", title: "Building a Complete Layout" }
         ]
       }
     ]

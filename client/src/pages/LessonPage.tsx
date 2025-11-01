@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useRoute } from "wouter";
+import { useState, useEffect } from "react";
+import { useRoute, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import LessonNav from "@/components/LessonNav";
 import CodeBlock from "@/components/CodeBlock";
 import ExerciseCard from "@/components/ExerciseCard";
@@ -8,139 +9,90 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Code2, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lightbulb } from "lucide-react";
-
-const courseData = {
-  "html-basics": {
-    title: "HTML Fundamentals",
-    sections: [
-      {
-        id: "section-1",
-        title: "Getting Started",
-        lessons: [
-          { id: "lesson-1-1", title: "What is HTML?", completed: false },
-          { id: "lesson-1-2", title: "HTML Document Structure", completed: false },
-          { id: "lesson-1-3", title: "Basic Tags and Elements", completed: false },
-        ]
-      },
-      {
-        id: "section-2",
-        title: "Text and Formatting",
-        lessons: [
-          { id: "lesson-2-1", title: "Headings and Paragraphs", completed: false },
-          { id: "lesson-2-2", title: "Text Formatting", completed: false },
-          { id: "lesson-2-3", title: "Lists and Navigation", completed: false },
-        ]
-      },
-      {
-        id: "section-3",
-        title: "Links and Media",
-        lessons: [
-          { id: "lesson-3-1", title: "Creating Links", completed: false },
-          { id: "lesson-3-2", title: "Adding Images", completed: false },
-          { id: "lesson-3-3", title: "Embedding Videos", completed: false },
-        ]
-      }
-    ]
-  },
-  "css-styling": {
-    title: "CSS Styling",
-    sections: [
-      {
-        id: "section-1",
-        title: "CSS Basics",
-        lessons: [
-          { id: "lesson-1-1", title: "What is CSS?", completed: false },
-          { id: "lesson-1-2", title: "Selectors and Properties", completed: false },
-          { id: "lesson-1-3", title: "Colors and Backgrounds", completed: false },
-        ]
-      },
-      {
-        id: "section-2",
-        title: "Layout Fundamentals",
-        lessons: [
-          { id: "lesson-2-1", title: "Box Model", completed: false },
-          { id: "lesson-2-2", title: "Flexbox Basics", completed: false },
-          { id: "lesson-2-3", title: "CSS Grid", completed: false },
-        ]
-      }
-    ]
-  }
-};
-
-const lessonContent: Record<string, any> = {
-  "lesson-1-1": {
-    title: "What is HTML?",
-    content: `HTML (HyperText Markup Language) is the standard language for creating web pages. It describes the structure of a webpage using a series of elements, which tell the browser how to display the content.
-
-Think of HTML as the skeleton of a website - it provides the structure and organization, while CSS and JavaScript add styling and interactivity.`,
-    keyPoints: [
-      "HTML stands for HyperText Markup Language",
-      "It's the foundation of all web pages",
-      "HTML uses tags to define elements",
-      "Browsers read HTML to display web pages"
-    ],
-    codeExample: {
-      code: `<!DOCTYPE html>
-<html>
-  <head>
-    <title>My First Page</title>
-  </head>
-  <body>
-    <h1>Hello, World!</h1>
-    <p>This is my first HTML page.</p>
-  </body>
-</html>`,
-      language: "html"
-    },
-    exercise: {
-      title: "Create a Simple HTML Page",
-      description: "Create a basic HTML document with a heading that says 'Welcome' and a paragraph that says 'This is my first webpage.'",
-      starterCode: `<!-- Write your HTML here -->`,
-      hints: [
-        "Start with the <!DOCTYPE html> declaration",
-        "Use <h1> for the heading and <p> for the paragraph",
-        "Don't forget to include <html>, <head>, and <body> tags"
-      ],
-      solution: `<!DOCTYPE html>
-<html>
-<head>
-  <title>Welcome</title>
-</head>
-<body>
-  <h1>Welcome</h1>
-  <p>This is my first webpage.</p>
-</body>
-</html>`,
-      language: "html"
-    }
-  }
-};
+import { progressStorage } from "@/lib/progressStorage";
 
 export default function LessonPage() {
   const [, params] = useRoute("/course/:courseId");
+  const [, setLocation] = useLocation();
   const courseId = params?.courseId || "html-basics";
   
-  const course = courseData[courseId as keyof typeof courseData];
-  const [currentLessonId, setCurrentLessonId] = useState(
-    course?.sections[0]?.lessons[0]?.id || "lesson-1-1"
-  );
-  
+  const { data: course, isLoading: courseLoading } = useQuery({
+    queryKey: ['/api/courses', courseId],
+    queryFn: async () => {
+      const res = await fetch(`/api/courses/${courseId}`);
+      if (!res.ok) throw new Error('Failed to fetch course');
+      return res.json();
+    }
+  });
+
+  const [currentLessonId, setCurrentLessonId] = useState<string>("");
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
   
-  const lesson = lessonContent[currentLessonId] || lessonContent["lesson-1-1"];
+  // Initialize with first lesson and load progress
+  useEffect(() => {
+    if (course && !currentLessonId) {
+      const firstLesson = course.sections[0]?.lessons[0]?.id;
+      if (firstLesson) {
+        setCurrentLessonId(firstLesson);
+      }
+    }
+    
+    // Load progress from localStorage
+    const progress = progressStorage.get();
+    setCompletedLessons(new Set(progress.completedLessons));
+  }, [course, currentLessonId]);
+
+  const { data: lesson, isLoading: lessonLoading } = useQuery({
+    queryKey: ['/api/lessons', currentLessonId],
+    enabled: !!currentLessonId,
+    queryFn: async () => {
+      const res = await fetch(`/api/lessons/${currentLessonId}`);
+      if (!res.ok) throw new Error('Failed to fetch lesson');
+      return res.json();
+    }
+  });
 
   const handleMarkComplete = () => {
+    progressStorage.markLessonComplete(currentLessonId);
     setCompletedLessons(prev => new Set([...Array.from(prev), currentLessonId]));
-    console.log(`Lesson ${currentLessonId} marked as complete`);
   };
 
-  const sectionsWithProgress = course.sections.map(section => ({
+  const getAllLessons = () => {
+    if (!course) return [];
+    return course.sections.flatMap((section: any) => section.lessons);
+  };
+
+  const handleNavigation = (direction: 'prev' | 'next') => {
+    const allLessons = getAllLessons();
+    const currentIndex = allLessons.findIndex((l: any) => l.id === currentLessonId);
+    
+    if (direction === 'prev' && currentIndex > 0) {
+      setCurrentLessonId(allLessons[currentIndex - 1].id);
+    } else if (direction === 'next' && currentIndex < allLessons.length - 1) {
+      setCurrentLessonId(allLessons[currentIndex + 1].id);
+    }
+  };
+
+  if (courseLoading || lessonLoading || !course || !lesson) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  const sectionsWithProgress = course.sections.map((section: any) => ({
     ...section,
-    lessons: section.lessons.map(l => ({
+    lessons: section.lessons.map((l: any) => ({
       ...l,
       completed: completedLessons.has(l.id)
     }))
   }));
+
+  const allLessons = getAllLessons();
+  const currentIndex = allLessons.findIndex((l: any) => l.id === currentLessonId);
+  const hasPrevious = currentIndex > 0;
+  const hasNext = currentIndex < allLessons.length - 1;
 
   return (
     <div className="flex h-screen">
@@ -208,7 +160,12 @@ export default function LessonPage() {
             )}
 
             <div className="flex items-center justify-between mt-12 pt-8 border-t">
-              <Button variant="outline" data-testid="button-previous-lesson">
+              <Button 
+                variant="outline" 
+                onClick={() => handleNavigation('prev')}
+                disabled={!hasPrevious}
+                data-testid="button-previous-lesson"
+              >
                 <ChevronLeft className="h-4 w-4 mr-2" />
                 Previous Lesson
               </Button>
@@ -228,7 +185,11 @@ export default function LessonPage() {
                 )}
               </Button>
               
-              <Button data-testid="button-next-lesson">
+              <Button 
+                onClick={() => handleNavigation('next')}
+                disabled={!hasNext}
+                data-testid="button-next-lesson"
+              >
                 Next Lesson
                 <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
